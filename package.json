@@ -11,7 +11,6 @@
   "license": "MIT",
   "dependencies": {
     "download-git-repo": "^3.0.2",
-    "fetch-json": "^2.6.0",
     "node-fetch": "^2.6.1"
   }
 }
