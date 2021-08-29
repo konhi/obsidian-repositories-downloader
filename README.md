@@ -11,6 +11,8 @@
 
 ![image](https://user-images.githubusercontent.com/61631665/131258790-2499b1d7-50fe-4b9a-abde-0f00d6d08b17.png)
 
+**Note:** this repository is pre-release. It works, but code may show many errors! 😅
+
 
 ## 👾 Usage
 ```bash
