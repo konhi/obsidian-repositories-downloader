@@ -1,0 +1,15 @@
+{
+  "name": "obsidian-repository-downloader",
+  "version": "1.0.0",
+  "description": "📩 Download every obsidian.md repository on GitHub",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "konhi <hello.konhi@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "download-git-repo": "^3.0.2",
+    "node-fetch": "^2.6.1"
+  }
+}
