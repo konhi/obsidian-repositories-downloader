@@ -1,6 +1,6 @@
-const fetch = require("node-fetch");
-const download = require("download-git-repo");
-const fs = require("fs");
+import fetch from "node-fetch";
+import download from "download-git-repo";
+import { existsSync } from "fs";
 
 const COMMUNITY_PLUGINS_URL =
   "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json";
@@ -15,7 +15,7 @@ async function downloadRepo(repo, branch = "master") {
   console.log("");
   console.log(`--- ${repo} ---`);
 
-  if (!fs.existsSync(repoDestination)) {
+  if (!existsSync(repoDestination)) {
     download(`${repo}#${branch}`, repoDestination, function (err) {
       if (err) {
         console.log(
