@@ -1,4 +1,6 @@
 # 📩 obsidian-repositories-downloader
+*(Work in progress, it's gonna get better)*
+
 📂 Downloads every availabe Obsidian plugin! (<1GB, smaller than average `node_modules` 😅)
 
 ![obsidian-repositories-downloader](https://user-images.githubusercontent.com/61631665/131258612-326288e8-f72d-4969-b003-9987522676d0.gif)
