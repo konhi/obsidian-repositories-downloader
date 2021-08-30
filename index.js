@@ -3,14 +3,22 @@ import { existsSync } from "fs";
 import fetch from "node-fetch";
 // Used to download git repositories. It's fast and simple, but you can't really do nice logging and UI with it. May be changed.
 import download from "download-git-repo";
+// Elegant terminal spinner.
+import ora from "ora";
 
 const URLS = {
   COMMUNITY_PLUGINS:
     "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json",
 };
 
+const spinner = ora("").start();
+
 /** Downloads GitHub repositories that aren't already downloaded, creating a tree structure. */
 function downloadRepositories(repos) {
+  const spinner = ora(
+    "Downloading repositories. This may take a while..."
+  ).start();
+
   for (const repo of repos) {
     // It creates a tree structure, like repositories/author/plugin-name
     const downloadDestination = `repositories/${repo}`;
@@ -34,6 +42,8 @@ function downloadRepositories(repos) {
 }
 /** Return list of plugin repositories on GitHub. */
 async function getPluginsRepos() {
+  const spinner = ora("Fetching community-plugins.json").start();
+
   // Fetch community-plugins.json and turn it object
   const communityPluginsJson = await fetch(URLS.COMMUNITY_PLUGINS).then(
     (response) => response.json()
@@ -41,6 +51,8 @@ async function getPluginsRepos() {
 
   // Get "repo" from every plugin.
   const pluginsRepos = communityPluginsJson.map((plugin) => plugin.repo);
+
+  spinner.succeed(`Found ${pluginsRepos.length} plugins!`);
 
   // [author/pluginname, author2/pluginname3...]
   return pluginsRepos;
