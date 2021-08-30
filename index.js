@@ -1,45 +1,49 @@
-import fetch from "node-fetch";
-import download from "download-git-repo";
 import { existsSync } from "fs";
+// Used to fetch community-plugins.json, may be changed to something different in future, like "got".
+import fetch from "node-fetch";
+// Used to download git repositories. It's fast and simple, but you can't really do nice logging and UI with it. May be changed.
+import download from "download-git-repo";
 
-const COMMUNITY_PLUGINS_URL =
-  "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json";
+const URLS = {
+  COMMUNITY_PLUGINS:
+    "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json",
+};
 
-async function fetchJSON(url) {
-  return fetch(url).then((response) => response.json());
-}
+/** Downloads GitHub repositories that aren't already downloaded, creating a tree structure. */
+function downloadRepositories(repos) {
+  for (const repo of repos) {
+    // It creates a tree structure, like repositories/author/plugin-name
+    const downloadDestination = `repositories/${repo}`;
 
-async function downloadRepo(repo, branch = "master") {
-  const repoDestination = `downloads/${repo}`;
+    // If repository is already downloaded, skip current iteration. It may be changed when user wants to update.
+    if (existsSync(downloadDestination)) {
+      continue;
+    }
 
-  console.log("");
-  console.log(`--- ${repo} ---`);
-
-  if (!existsSync(repoDestination)) {
-    download(`${repo}#${branch}`, repoDestination, function (err) {
+    // Tries to download from master branch and if gets error, does that from main branch. Using "branch" from community-plugins.json doesn't always work as it's user provided.
+    download(`${repo}#master`, downloadDestination, function (err) {
       if (err) {
-        console.log(
-          `⌛ Caught error: ${err}. Trying to download from main branch...`
-        );
-        try {
-          downloadRepo(repo, "main");
-          console.log(`⭐ Hurray! Repository downloaded from main branch.`);
-        } catch (error) {
-          console.log(`❌ Couldn't download repo!`);
-        }
+        download(`${repo}#main`, downloadDestination, function (err) {
+          if (err) {
+            console.error(err);
+          }
+        });
       }
     });
-    console.log("✅ Repository downloaded.");
-  } else {
-    console.log("🔄 Repository is already downloaded, skipping...");
   }
 }
+/** Return list of plugin repositories on GitHub. */
+async function getPluginsRepos() {
+  // Fetch community-plugins.json and turn it object
+  const communityPluginsJson = await fetch(URLS.COMMUNITY_PLUGINS).then(
+    (response) => response.json()
+  );
 
-fetchJSON(COMMUNITY_PLUGINS_URL).then((plugins) =>
-  plugins.map((plugin) => {
-    console.log("✅ Fetched community-plugins.json");
-    downloadRepo(plugin.repo);
-    console.log("");
-    console.log("✅ All repository got downloaded.");
-  })
-);
+  // Get "repo" from every plugin.
+  const pluginsRepos = communityPluginsJson.map((plugin) => plugin.repo);
+
+  // [author/pluginname, author2/pluginname3...]
+  return pluginsRepos;
+}
+
+getPluginsRepos().then((repos) => downloadRepositories(repos));
