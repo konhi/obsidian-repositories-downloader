@@ -1,48 +1,53 @@
-import { existsSync } from "fs";
 // Used to fetch community-plugins.json, may be changed to something different in future, like "got".
 import fetch from "node-fetch";
-// Used to download git repositories. It's fast and simple, but you can't really do nice logging and UI with it. May be changed.
-import download from "download-git-repo";
-// Elegant terminal spinner.
-import ora from "ora";
+import gitly from "gitly";
 
 const URLS = {
   COMMUNITY_PLUGINS:
     "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json",
 };
 
-const spinner = ora("").start();
+/** Download repository and fallback to other branch if it doesn't use `master`. */
+async function downloadRepo(repo) {
+  let source;
+
+  // Fallback to main branch if master doesn't work. The default in `gitly` is `master` and most Obsidian repositories use it.
+  try {
+    // Try to download from `master` branch.
+    source = await download(repo, { throw: true });
+  } catch (error) {
+    // If not found, try to download from main brach. Else it's an other error.
+    if (error.code === 404) {
+      source = await download(`${repo}#main`, { throw: true });
+    } else {
+      console.error(error);
+    }
+  }
+
+  await extract(source, `repositories/${repo}`);
+}
+
+// const spinner = ora("").start();
 
 /** Downloads GitHub repositories that aren't already downloaded, creating a tree structure. */
-function downloadRepositories(repos) {
-  const spinner = ora(
-    "Downloading repositories. This may take a while..."
-  ).start();
+async function downloadRepositories(repos) {
+  // const spinner = ora(
+  //   "Downloading repositories. This may take a while..."
+  // ).start();
 
   for (const repo of repos) {
-    // It creates a tree structure, like repositories/author/plugin-name
-    const downloadDestination = `repositories/${repo}`;
-
     // If repository is already downloaded, skip current iteration. It may be changed when user wants to update.
-    if (existsSync(downloadDestination)) {
-      continue;
-    }
+    // if (existsSync(downloadDestination)) {
+    //   continue;
+    // }
 
     // Tries to download from master branch and if gets error, does that from main branch. Using "branch" from community-plugins.json doesn't always work as it's user provided.
-    download(`${repo}#master`, downloadDestination, function (err) {
-      if (err) {
-        download(`${repo}#main`, downloadDestination, function (err) {
-          if (err) {
-            console.error(err);
-          }
-        });
-      }
-    });
+    downloadRepo(repo);
   }
 }
 /** Return list of plugin repositories on GitHub. */
 async function getPluginsRepos() {
-  const spinner = ora("Fetching community-plugins.json").start();
+  // const spinner = ora("Fetching community-plugins.json").start();
 
   // Fetch community-plugins.json and turn it object
   const communityPluginsJson = await fetch(URLS.COMMUNITY_PLUGINS).then(
@@ -52,10 +57,15 @@ async function getPluginsRepos() {
   // Get "repo" from every plugin.
   const pluginsRepos = communityPluginsJson.map((plugin) => plugin.repo);
 
-  spinner.succeed(`Found ${pluginsRepos.length} plugins!`);
+  // spinner.succeed(`Found ${pluginsRepos.length} plugins!`);
 
   // [author/pluginname, author2/pluginname3...]
   return pluginsRepos;
 }
 
 getPluginsRepos().then((repos) => downloadRepositories(repos));
+
+// downloadRepositories(["jplattel/obsidian-query-language"]);
+// downloadRepositories(["MichalBures/obsidian-file-path-to-uri"]);
+
+// console.log(await gitly('iwatakeshi/gitly', 'repositories/'));

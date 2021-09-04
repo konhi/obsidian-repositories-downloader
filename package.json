@@ -10,7 +10,7 @@
   "author": "konhi <hello.konhi@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "download-git-repo": "^3.0.2",
+    "gitly": "^2.1.5",
     "node-fetch": "^2.6.1",
     "ora": "^6.0.0"
   }
