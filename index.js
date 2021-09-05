@@ -1,6 +1,8 @@
 // Used to fetch community-plugins.json, may be changed to something different in future, like "got".
 import fetch from "node-fetch";
 import { download, extract } from "gitly";
+import cliProgress from "cli-progress";
+import ora from "ora";
 
 const URLS = {
   COMMUNITY_PLUGINS:
@@ -27,23 +29,27 @@ async function downloadRepo(repo) {
   await extract(source, `repositories/${repo}`);
 }
 
-// const spinner = ora("").start();
-
 /** Downloads GitHub repositories that aren't already downloaded, creating a tree structure. */
 async function downloadRepositories(repos) {
-  // const spinner = ora(
-  //   "Downloading repositories. This may take a while..."
-  // ).start();
+  const downloadBar = new cliProgress.SingleBar({
+    format: "[{bar}] {percentage}% | {value}/{total} | 📂 {repo}",
+    hideCursor: true,
+  }, cliProgress.Presets.shades_classic);
+
+  downloadBar.start(repos.length, 0);
 
   for (const repo of repos) {
-    downloadRepo(repo);
+    await downloadRepo(repo).then(downloadBar.increment({ repo: repo }));
   }
+
+  downloadBar.stop();
 }
+
 /** Return list of plugin repositories on GitHub. */
 async function getPluginsRepos() {
-  // const spinner = ora("Fetching community-plugins.json").start();
+  const spinner = ora("Fetching community-plugins.json").start();
 
-  // Fetch community-plugins.json and turn it object
+  // Fetch community-plugins.json and turn it into object
   const communityPluginsJson = await fetch(URLS.COMMUNITY_PLUGINS).then(
     (response) => response.json()
   );
@@ -51,7 +57,7 @@ async function getPluginsRepos() {
   // Get "repo" from every plugin.
   const pluginsRepos = communityPluginsJson.map((plugin) => plugin.repo);
 
-  // spinner.succeed(`Found ${pluginsRepos.length} plugins!`);
+  spinner.succeed(`Found ${pluginsRepos.length} plugins!`);
 
   // [author/pluginname, author2/pluginname3...]
   return pluginsRepos;

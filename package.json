@@ -5,11 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npm ci && node index.js"
   },
   "author": "konhi <hello.konhi@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "cli-progress": "^3.9.0",
     "gitly": "^2.1.5",
     "node-fetch": "^2.6.1",
     "ora": "^6.0.0"
