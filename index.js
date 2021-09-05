@@ -1,6 +1,6 @@
 // Used to fetch community-plugins.json, may be changed to something different in future, like "got".
 import fetch from "node-fetch";
-import gitly from "gitly";
+import { download, extract } from "gitly";
 
 const URLS = {
   COMMUNITY_PLUGINS:
@@ -36,12 +36,6 @@ async function downloadRepositories(repos) {
   // ).start();
 
   for (const repo of repos) {
-    // If repository is already downloaded, skip current iteration. It may be changed when user wants to update.
-    // if (existsSync(downloadDestination)) {
-    //   continue;
-    // }
-
-    // Tries to download from master branch and if gets error, does that from main branch. Using "branch" from community-plugins.json doesn't always work as it's user provided.
     downloadRepo(repo);
   }
 }
@@ -64,8 +58,3 @@ async function getPluginsRepos() {
 }
 
 getPluginsRepos().then((repos) => downloadRepositories(repos));
-
-// downloadRepositories(["jplattel/obsidian-query-language"]);
-// downloadRepositories(["MichalBures/obsidian-file-path-to-uri"]);
-
-// console.log(await gitly('iwatakeshi/gitly', 'repositories/'));
