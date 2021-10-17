@@ -22,3 +22,5 @@ git clone https://github.com/konhi/obsidian-repositories-downloader.git
 cd obsidian-repositories-downloader
 npm start
 ```
+
+- In case of any problems, you may try updating your nodejs version to newest. ([see this issue](https://github.com/konhi/obsidian-repositories-downloader/issues/2)). You may also try using [this shell tool](https://github.com/luckman212/obsidian-plugin-downloader).
