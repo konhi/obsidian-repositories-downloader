@@ -23,4 +23,5 @@ cd obsidian-repositories-downloader
 npm start
 ```
 
+- Tested with `node v12.22.7`.
 - In case of any problems, you may try updating your nodejs version to newest. ([see this issue](https://github.com/konhi/obsidian-repositories-downloader/issues/2)). You may also try using [this shell tool](https://github.com/luckman212/obsidian-plugin-downloader).
