@@ -12,7 +12,7 @@
   "dependencies": {
     "cli-progress": "^3.9.0",
     "gitly": "^2.1.5",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.1.1",
     "ora": "^6.0.0"
   }
 }
