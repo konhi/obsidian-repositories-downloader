@@ -67,8 +67,8 @@ async function downloadRepositories(repos) {
   );
 
   downloadBar.start(repos.length, 0);
-  for (const repo of repos.slice(0,20)) { // for debug 
-  // for (const repo of repos) {
+  // for (const repo of repos.slice(0,20)) { // for debug 
+  for (const repo of repos) {
     await downloadRepo(repo)
       .then(downloadBar.increment({ repo: repo }))
       // .then((res) => console.log(res)); // for debug   
