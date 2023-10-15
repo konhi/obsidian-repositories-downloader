@@ -3,11 +3,32 @@ import fetch from "node-fetch";
 import { download, extract } from "gitly";
 import cliProgress from "cli-progress";
 import ora from "ora";
+import simpleGit from 'simple-git';
+import path from 'path';
+import { access, constants } from 'fs/promises';
+import figures from 'figures';
+import chalk from "chalk";
+
 
 const URLS = {
   COMMUNITY_PLUGINS:
     "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json",
 };
+
+const repoBasePath = 'repositories';
+
+// number of parallel git jobs
+const batchSize = 10;
+
+async function exists(path) {
+  try {
+    await access(path, constants.F_OK);
+    return true;
+  }
+  catch (err) {
+    return false;
+  }
+}
 
 /** Download repository and fallback to other branch if it doesn't use `master`. */
 async function downloadRepo(repo) {
@@ -26,30 +47,69 @@ async function downloadRepo(repo) {
     }
   }
 
-  await extract(source, `repositories/${repo}`);
+  await extract(source, path.join(repoBasePath, repo));
 }
-/** Downloads GitHub repositories that aren't already downloaded, creating a tree structure. */
-async function downloadRepositories(repos) {
-  const downloadBar = new cliProgress.SingleBar({
+
+/** Downloads GitHub repositories that aren't already downloaded, creating a tree structure,
+ * or pulls latest changes for existing repositories
+ */
+async function processRepositories(repos) {
+  const progressBar = new cliProgress.SingleBar({
     format: "[{bar}] {percentage}% | {value}/{total} | 📂 {repo}",
     hideCursor: true,
   }, cliProgress.Presets.shades_classic);
 
-  downloadBar.start(repos.length, 0);
+  progressBar.start(repos.length, 0);
 
   const failedRepos = [];
-  for (const repo of repos) {
-    try {
-      await downloadRepo(repo).then(downloadBar.increment({ repo: repo }));
+  const newRepos = []
+  const updatedRepos = [];
+
+  while (repos.length) {
+    let reposBatch = [];
+    for (let i = 0; i < batchSize && repos.length; i++) {
+      reposBatch.push(repos.pop());
     }
-    catch (err) {
-      failedRepos.push({ repo, err })
+
+    let promisesGit = [];
+    for (const repo of reposBatch) {
+      const localRepoPath = path.join(repoBasePath, repo);
+
+      const gitPromise = await exists(localRepoPath) ?
+       // git pull
+        (async () => {
+          try {
+            const git = new simpleGit(localRepoPath);
+            const { summary } = await git.pull();
+            if (summary.changes || summary.deletions || summary.insertions) {
+              updatedRepos.push({ repo, summary });
+            }
+            progressBar.increment({ repo: repo });
+          }
+          catch (err) {
+            failedRepos.push({ repo, err })
+          }
+        })()
+        // git clone
+        : (async () => {
+          try {
+            const repoUrl = `https://github.com/${repo}.git`;
+            await simpleGit().clone(repoUrl, localRepoPath);
+            newRepos.push({ repo });
+            progressBar.increment({ repo: repo });
+          }
+          catch (err) {
+            failedRepos.push({ repo, err })
+          }
+
+        })();
+      promisesGit.push(gitPromise);
     }
+    await Promise.all(promisesGit);
   }
+  progressBar.stop();
 
-  downloadBar.stop();
-
-  return failedRepos;
+  return { newRepos, updatedRepos, failedRepos };
 }
 
 /** Return list of plugin repositories on GitHub. */
@@ -72,10 +132,34 @@ async function getPluginsRepos() {
 
 getPluginsRepos()
   .then((repos) => {
-    return downloadRepositories(repos)
+    return processRepositories(repos)
   })
-  .then((failedRepos) => {
-    failedRepos.forEach(x => {
-      console.log(`⚠️ Failed to download '${x.repo}': ${x.err.message}`)
-    })
+  .then((status) => {
+    if (!status.newRepos.length && !status.updatedRepos.length && !status.failedRepos.length) {
+      console.log('Everything is up to date.');
+      return;
+    }
+
+    if (status.newRepos.length) {
+      console.log(`${chalk.yellow(figures.star)}  ${status.newRepos.length} new`)
+      status.newRepos.forEach(x => {
+        console.log(`   ${x.repo}`)
+      })
+    }
+
+    if (status.updatedRepos.length) {
+      console.log(`${chalk.green(figures.tick)}  ${status.updatedRepos.length} updated`)
+      status.updatedRepos.forEach(x => {
+        const {changes, deletions, insertions} = x.summary;
+        console.log(`   ${x.repo} [changes: ${changes}, insertions: ${insertions}, deletions: ${deletions}]`)
+      })
+    }
+
+    if (status.failedRepos.length) {
+      console.log(`${chalk.red(figures.warning)}  ${status.failedRepos.length} failed`)
+      status.failedRepos.forEach(x => {
+        console.log(`   ${x.repo}: ${x.err.message}`)
+      })
+    }
+
   });
