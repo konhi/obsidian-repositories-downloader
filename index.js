@@ -28,7 +28,6 @@ async function downloadRepo(repo) {
 
   await extract(source, `repositories/${repo}`);
 }
-
 /** Downloads GitHub repositories that aren't already downloaded, creating a tree structure. */
 async function downloadRepositories(repos) {
   const downloadBar = new cliProgress.SingleBar({
@@ -38,11 +37,19 @@ async function downloadRepositories(repos) {
 
   downloadBar.start(repos.length, 0);
 
+  const failedRepos = [];
   for (const repo of repos) {
-    await downloadRepo(repo).then(downloadBar.increment({ repo: repo }));
+    try {
+      await downloadRepo(repo).then(downloadBar.increment({ repo: repo }));
+    }
+    catch (err) {
+      failedRepos.push({ repo, err })
+    }
   }
 
   downloadBar.stop();
+
+  return failedRepos;
 }
 
 /** Return list of plugin repositories on GitHub. */
@@ -63,4 +70,12 @@ async function getPluginsRepos() {
   return pluginsRepos;
 }
 
-getPluginsRepos().then((repos) => downloadRepositories(repos));
+getPluginsRepos()
+  .then((repos) => {
+    return downloadRepositories(repos)
+  })
+  .then((failedRepos) => {
+    failedRepos.forEach(x => {
+      console.log(`⚠️ Failed to download '${x.repo}': ${x.err.message}`)
+    })
+  });
