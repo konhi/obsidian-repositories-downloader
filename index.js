@@ -84,10 +84,12 @@ async function processRepositories(repos) {
             if (summary.changes || summary.deletions || summary.insertions) {
               updatedRepos.push({ repo, summary });
             }
-            progressBar.increment({ repo: repo });
           }
           catch (err) {
             failedRepos.push({ repo, err })
+          }
+          finally{
+            progressBar.increment({ repo: repo });
           }
         })()
         // git clone
@@ -96,12 +98,13 @@ async function processRepositories(repos) {
             const repoUrl = `https://github.com/${repo}.git`;
             await simpleGit().clone(repoUrl, localRepoPath);
             newRepos.push({ repo });
-            progressBar.increment({ repo: repo });
           }
           catch (err) {
             failedRepos.push({ repo, err })
           }
-
+          finally{
+            progressBar.increment({ repo: repo });
+          }
         })();
       promisesGit.push(gitPromise);
     }
