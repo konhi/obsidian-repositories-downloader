@@ -76,7 +76,7 @@ async function processRepositories(repos) {
       const localRepoPath = path.join(repoBasePath, repo);
 
       const gitPromise = await exists(localRepoPath) ?
-       // git pull
+        // git pull
         (async () => {
           try {
             const git = new simpleGit(localRepoPath);
@@ -88,7 +88,7 @@ async function processRepositories(repos) {
           catch (err) {
             failedRepos.push({ repo, err })
           }
-          finally{
+          finally {
             progressBar.increment({ repo: repo });
           }
         })()
@@ -102,7 +102,7 @@ async function processRepositories(repos) {
           catch (err) {
             failedRepos.push({ repo, err })
           }
-          finally{
+          finally {
             progressBar.increment({ repo: repo });
           }
         })();
@@ -151,10 +151,13 @@ getPluginsRepos()
     }
 
     if (status.updatedRepos.length) {
-      console.log(`${chalk.green(figures.tick)}  ${status.updatedRepos.length} updated`)
+      console.log(`${chalk.blue(figures.tick)}  ${status.updatedRepos.length} updated`)
+      const insertionsLabel = chalk.green('+');
+      const deletionsLabel = chalk.red('-');
+      const changesLabel = chalk.blue(figures.tick);
       status.updatedRepos.forEach(x => {
-        const {changes, deletions, insertions} = x.summary;
-        console.log(`   ${x.repo} [changes: ${changes}, insertions: ${insertions}, deletions: ${deletions}]`)
+        const { changes, deletions, insertions } = x.summary;
+        console.log(`   ${x.repo} [${changes}${changesLabel}, ${insertions}${insertionsLabel}, ${deletions}${deletionsLabel}]`);
       })
     }
 
