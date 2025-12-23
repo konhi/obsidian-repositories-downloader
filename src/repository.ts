@@ -7,6 +7,31 @@ import {
   renameExtractedFolder,
 } from "./filesystem";
 
+function sanitizeDirectoryName(name: string): string {
+  if (!name || name.length === 0) {
+    throw new Error("Directory name cannot be empty");
+  }
+
+  const removePathTraversal = name
+    .replace(/\.\./g, "")
+    .replace(/\//g, "-")
+    .replace(/\\/g, "-");
+
+  const removeDangerousChars = removePathTraversal
+    .replace(/[<>:"|?*\x00-\x1f]/g, "-")
+    .replace(/^\.+/, "")
+    .replace(/\.+$/, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  if (!removeDangerousChars || removeDangerousChars.length === 0) {
+    throw new Error(`Invalid directory name after sanitization: ${name}`);
+  }
+
+  return removeDangerousChars;
+}
+
 export function parseRepo(repo: string): RepoParts {
   const parts = repo.split("/");
   if (parts.length !== 2 || !parts[0] || !parts[1]) {
@@ -35,12 +60,17 @@ async function downloadArchive(
 export async function downloadRepository(repo: string): Promise<void> {
   const { owner, name } = parseRepo(repo);
 
+  const sanitizedOwner = sanitizeDirectoryName(owner);
+  const sanitizedName = sanitizeDirectoryName(name);
+  const sanitizedRepo = `${sanitizedOwner}/${sanitizedName}`;
+
   for (const branch of DEFAULT_BRANCHES) {
     try {
       const archiveBuffer = await downloadArchive(owner, name, branch);
-      const zipPath = `${REPOSITORIES_DIR}/${repo}.zip`;
-      const extractedPath = `${REPOSITORIES_DIR}/${name}-${branch}`;
-      const finalPath = `${REPOSITORIES_DIR}/${repo}`;
+      const sanitizedBranch = sanitizeDirectoryName(branch);
+      const zipPath = `${REPOSITORIES_DIR}/${sanitizedRepo}.zip`;
+      const extractedPath = `${REPOSITORIES_DIR}/${sanitizedName}-${sanitizedBranch}`;
+      const finalPath = `${REPOSITORIES_DIR}/${sanitizedRepo}`;
 
       await Bun.write(zipPath, archiveBuffer);
       await extractZip(zipPath, REPOSITORIES_DIR);

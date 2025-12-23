@@ -18,10 +18,19 @@ export async function removeExistingDirectory(path: string): Promise<void> {
   await Bun.spawn(["rm", "-rf", path]).exited;
 }
 
+async function ensureParentDirectory(path: string): Promise<void> {
+  const pathParts = path.split("/");
+  if (pathParts.length > 1) {
+    const parentDir = pathParts.slice(0, -1).join("/");
+    await Bun.spawn(["mkdir", "-p", parentDir]).exited;
+  }
+}
+
 export async function renameExtractedFolder(
   extractedPath: string,
   finalPath: string
 ): Promise<void> {
+  await ensureParentDirectory(finalPath);
   const process = Bun.spawn(["mv", extractedPath, finalPath]);
   await process.exited;
 
