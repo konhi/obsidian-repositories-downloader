@@ -1,8 +1,8 @@
 ## Motivation
 
-This project was created in 2021. At the time, I wanted to write a Obsidian plugin, but there were no docs or tutorials for that. There was also no API documentation. The easiest way was to learn from other code examples, and see how other devs specifics part of Obsidian API. Thanks to this project, one was able to download every repo and then search it ultra fast. 
+This project was created in 2021. At the time, I wanted to write an Obsidian plugin, but there were no docs or tutorials. There was also no API documentation. The easiest approach was to learn from existing code and see how other developers used specific parts of the Obsidian API. Thanks to this project, it was possible to download all repositories and search through them extremely fast.
 
-Nowadays, GitHub Code Search works a lot better, there are products like Sourcegraph that solve that issues, and finally, Obsidian became a great, well-documented product, with massive community.
+Nowadays, GitHub Code Search works much better, tools like Sourcegraph solve these problems, and finally -- Obsidian has become a well-documented product with a large community.
 
 ---
 
