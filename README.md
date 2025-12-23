@@ -1,3 +1,11 @@
+## Motivation
+
+This project was created in 2021. At the time, I wanted to write a Obsidian plugin, but there were no docs or tutorials for that. There was also no API documentation. The easiest way was to learn from other code examples, and see how other devs specifics part of Obsidian API. Thanks to this project, one was able to download every repo and then search it ultra fast. 
+
+Nowadays, GitHub Code Search works a lot better, there are products like Sourcegraph that solve that issues, and finally, Obsidian became a great, well-documented product, with massive community.
+
+---
+
 <div align='center'>
     <h1>📩 Obsidian Repositories Downloader</h1>
   <img src="https://user-images.githubusercontent.com/61631665/132124154-58db4b3d-e19f-4f71-844c-5aefc0917b15.gif"/>
